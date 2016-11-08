@@ -1,13 +1,13 @@
 CC = gcc
 
-all: myftp.o myftpd.o
+all: myfrm.o myfrmd.o
 
-myftp.o: myftp.c
-	gcc myftp.c -o myftp -lmhash
+myfrm.o: myfrm.c
+	gcc myfrm.c -o myfrm -lmhash
 
-myftpd.o: myftpd.c
-	gcc myftpd.c -o myftpd -lmhash
+myfrmd.o: myfrmd.c
+	gcc myfrmd.c -o myfrmd -lmhash
 
 clean:
 	$(RM) count *.o *~
-	rm -f myftp myftpd
+	rm -f myfrm myfrmd

@@ -83,10 +83,14 @@ int main(int argc, char *argv[]) {
     while(1){
         printf("Enter Command: "); 
         scanf("%s", buf);  
-        n = write(sockfd,buf, strlen(buf)); 
+        n = write(sockfd, buf, strlen(buf)); 
         if(n<0)
             error("ERROR writing to socket");
 
+		if (strcmp(buf, "XIT") == 0) {
+			printf("The connection has been closed.\n");
+			exit(0);
+		}
         bzero(buf, BUFSIZE); 
     }
 

@@ -114,10 +114,14 @@ int main(int argc, char *argv[]) {
             bzero(buf, BUFSIZE);
             n = read(sockfd2, buf, BUFSIZE);
             strcpy(com,buf);
-
+			
             if(n < 0)
-               error("Error reading from socket");0
+               error("Error reading from socket");
         
+			if (strcmp(com, "XIT") == 0) {
+				close(sockfd2);
+				break;
+			}
             n = write(sockfd2, buf, strlen(buf));
 
             if(n < 0)
