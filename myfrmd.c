@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <dirent.h>
+#include "uthash.h"
 
 #define BUFSIZE 4096
 
@@ -59,14 +60,16 @@ int main(int argc, char *argv[]) {
     char* path;
     char choice[BUFSIZE]; 
     char* filename;
+    char* password;
 
     // parse command line arguments
     if (argc != 2) {
-        fprintf(stderr, "usage: %s <port> <encryption key>\n", argv[0]);
+        fprintf(stderr, "usage: %s <port> <password>\n", argv[0]);
         exit(1);
     }
 
     port = atoi(argv[1]);
+    password = argv[2];
 
     // create the parent socket
     tcpsockfd = socket(AF_INET, SOCK_STREAM, 0);
