@@ -85,11 +85,13 @@ int main(int argc, char *argv[]) {
     }
 
     while(1){
+        /* Handle password request, not yet owrking
         bzero(buf, BUFSIZE);
         n = recvfrom(udpsockfd, buf, strlen(buf), 0, &serveraddr, &serverlen);
         if (n < 0) 
             error("ERROR in pass recvfrom");
         printf("Echo from server: %s", buf);
+        */
 
         printf("Enter Command: "); 
         scanf("%s", buf);  
