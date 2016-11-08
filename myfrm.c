@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
         error ("ERROR connecting"); 
     }
     //START AND GET USERNAME
-    printf("Type 'Start' to begin\n");  
+        printf("Type 'Start' to begin\n");  
         bzero(buf, BUFSIZE); 
         scanf("%s", buf); 
         n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr)); //write(tcpsockfd, buf, strlen(buf)); 
@@ -97,7 +97,17 @@ int main(int argc, char *argv[]) {
         n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &serveraddr, sizeof(serveraddr)); 
         if (n<0)
             error("Error in sending username\n"); 
-
+        
+        n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&serveraddr, &serverlen);
+        if(n<0)
+            error("Error in receving password request\n"); 
+        printf("%s\n", buf); 
+        bzero(buf, BUFSIZE); 
+        //read and send password
+        scanf("%s", buf); 
+        n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &serveraddr, sizeof(serveraddr)); 
+        if (n<0)
+            error("Error in sending password\n"); 
 
 
     while(1){

@@ -36,6 +36,9 @@ void error(char *msg) {
 
 int createFile(char *name, char * username); 
 
+int checkUser(char*username); 
+int login(char * username, char * password, int newUser); 
+
 int main(int argc, char *argv[]) {
     int tcpsockfd;                      // tcp socket
     int udpsockfd;                      // udp socket
@@ -57,7 +60,8 @@ int main(int argc, char *argv[]) {
     char *len_string; 
     unsigned char * serverHash; 
     char com[BUFSIZE];
-    char* path, filename, password;
+    char password[BUFSIZE]; 
+    char* path, filename;
     char choice[BUFSIZE]; 
     char * boards[MAX_BOARDS]; 
     int boardCount =0; 
@@ -70,7 +74,7 @@ int main(int argc, char *argv[]) {
 
     // Store command line arguments
     port = atoi(argv[1]);
-    password = argv[2];
+    //password = argv[2];
 
     // create the TCP socket
     tcpsockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -125,20 +129,48 @@ int main(int argc, char *argv[]) {
         printf("Server connected with %s (%s)\n", hostp->h_name, hostaddrp);
 
         bzero(buf, BUFSIZE); 
-            n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr*)&clientaddr, &clientlen);  
-            if (strcmp(buf, "Start") == 0){
+        n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr*)&clientaddr, &clientlen);  
+        if (strcmp(buf, "Start") == 0){
+            bzero(buf, BUFSIZE); 
+            strcpy(buf, "Enter username: "); 
+            n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
+            if (n<0)
+            error("Error in sending username request\n"); 
+            bzero(buf, BUFSIZE); 
+            n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr*)&clientaddr, &clientlen);      
+            sprintf(username, "%s", buf);  
+            printf("%s\n", username); 
+            //check if username exists
+            
+            if(!checkUser(username)){
                 bzero(buf, BUFSIZE); 
-                strcpy(buf, "Enter username: "); 
-                n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
-                if (n<0)
-                    error("Error in sending username request\n"); 
+                strcpy(buf, "Create password: "); 
+                n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen);
+                if(n<0)
+                    error("Error in requesting password\n"); 
                 bzero(buf, BUFSIZE); 
-                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr*)&clientaddr, &clientlen); 
-                 
-                sprintf(username, "%s", buf);  
-                printf("%s\n", username); 
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr*)&clientaddr, &clientlen);    
+                if(n<0)
+                    error("Error in recieving password\n"); 
+                strcpy(password, buf); 
+                printf("%s pw: %s\n", username, password); 
+                //login(username, password, 1); 
             }
-        
+            else{
+                bzero(buf, BUFSIZE); 
+                strcpy(buf, "Enter password: "); 
+                n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen);
+                if(n<0)
+                    error("Error in requesting password\n"); 
+                bzero(buf, BUFSIZE); 
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr*)&clientaddr, &clientlen);    
+                if (n<0)
+                    error("Error in recieving password\n"); 
+                strcpy(password, buf); 
+                printf("%s pw: %s\n", username, password); 
+                //login(username, password, 0); 
+            }
+        }//end Start blcok
         
         while(1) {
 
@@ -215,11 +247,29 @@ int main(int argc, char *argv[]) {
 int createFile(char * name, char * username){
    FILE *fp;  
    char s[BUFSIZE]; 
-   printf("HERE\n"); 
+   
    fp = fopen(name, "w+"); 
    sprintf(s, "Created by: %s\n", username); 
    fprintf(fp, "%s", s);  
    int result = fclose(fp); 
     return result; 
 }
+
+int checkUser(char * username){
+
+    FILE *fp; 
+    char  buf[BUFSIZE];
+    fp = fopen("users.txt", "r");
+    while(fgets(buf, sizeof(buf), fp)){
+        buf[strlen(buf) -1]='\0';  
+        if(strcmp(buf, username) == 0){
+            fclose(fp); 
+            return 1; 
+        }
+        fgets(buf, sizeof(buf), fp); //skip password
+    }
+    fclose(fp); 
+    return 0; 
+}
+
 
