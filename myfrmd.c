@@ -118,13 +118,13 @@ int main(int argc, char *argv[]) {
 
         printf("Server connected with %s (%s)\n", hostp->h_name, hostaddrp);
 
-        bzero(buf, BUFSIZE);
-        strcpy(buf, "Enter admin password: ");
-        n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &clientaddr, clientlen);
-        if (n < 0)
-            error("ERROR in pass request");
-
         while(1) {
+
+            bzero(buf, BUFSIZE);
+            strcpy(buf, "Enter admin password: ");
+            n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &clientaddr, clientlen);
+            if (n < 0)
+                error("ERROR in pass request");
             // receive a datagram from a client
             bzero(buf, BUFSIZE);
             n = read(sockfd2, buf, BUFSIZE);
