@@ -26,12 +26,15 @@
 #include "uthash.h"
 
 #define BUFSIZE 4096
+#define MAX_BOARDS 100
 
 // error handling
 void error(char *msg) {
   perror(msg);
   exit(1);
 }
+
+int createFile(char *name, char * username); 
 
 int main(int argc, char *argv[]) {
     int tcpsockfd;                      // tcp socket
@@ -50,11 +53,14 @@ int main(int argc, char *argv[]) {
     int n, k, i;                        // message size, key size, counter
     short len;
     char *name;
+    char username[BUFSIZE]; 
     char *len_string; 
     unsigned char * serverHash; 
     char com[BUFSIZE];
     char* path, filename, password;
     char choice[BUFSIZE]; 
+    char * boards[MAX_BOARDS]; 
+    int boardCount =0; 
 
     // parse command line arguments
     if (argc != 2) {
@@ -118,6 +124,22 @@ int main(int argc, char *argv[]) {
 
         printf("Server connected with %s (%s)\n", hostp->h_name, hostaddrp);
 
+        bzero(buf, BUFSIZE); 
+            n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr*)&clientaddr, &clientlen);  
+            if (strcmp(buf, "Start") == 0){
+                bzero(buf, BUFSIZE); 
+                strcpy(buf, "Enter username: "); 
+                n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
+                if (n<0)
+                    error("Error in sending username request\n"); 
+                bzero(buf, BUFSIZE); 
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr*)&clientaddr, &clientlen); 
+                 
+                sprintf(username, "%s", buf);  
+                printf("%s\n", username); 
+            }
+        
+        
         while(1) {
 
             /*  Password request, not yet working
@@ -127,7 +149,7 @@ int main(int argc, char *argv[]) {
             if (n < 0)
                 error("ERROR in pass request");
             */
-            
+                        
             // receive a datagram from a client
             bzero(buf, BUFSIZE);
             n = read(sockfd2, buf, BUFSIZE);
@@ -143,6 +165,29 @@ int main(int argc, char *argv[]) {
                 //Shut down
             } else if(strcmp(com, "CRT") == 0){
                 //Create Board
+                bzero(buf, BUFSIZE); 
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
+                if (n<0)
+                    error("Error in creating board\n"); 
+                if(createFile(buf, username) == 0){
+                    //successfully created board
+                    bzero(buf, BUFSIZE); 
+                    strcpy(buf, "successfully created board"); 
+                    n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
+                    if (n < 0)
+                        error("Error in sending board creation confirmation\n");
+                    //keep track of boards created in current program
+                    boards[boardCount] = name; 
+                    boardCount++; 
+
+                } else{
+                    //error in creating board
+                    bzero(buf, BUFSIZE); 
+                    strcpy(buf, "error in creating board"); 
+                    n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
+                    if(n<0)
+                        error("Error in sending board creation error\n"); 
+                }
             } else if (strcmp(com, "MSG") == 0){
                 //Leave Message
             } else if (strcmp(com, "DLT") == 0){
@@ -166,3 +211,15 @@ int main(int argc, char *argv[]) {
         }
     }
 }
+
+int createFile(char * name, char * username){
+   FILE *fp;  
+   char s[BUFSIZE]; 
+   printf("HERE\n"); 
+   fp = fopen(name, "w+"); 
+   sprintf(s, "Created by: %s\n", username); 
+   fprintf(fp, "%s", s);  
+   int result = fclose(fp); 
+    return result; 
+}
+

@@ -4,7 +4,7 @@
 
 ### TODO:
 
-- [ ] CRT
+- [X] CRT (emily)
 - [ ] MSG
 - [ ] DLT
 - [ ] EDT
@@ -13,5 +13,5 @@
 - [ ] APN
 - [ ] DWN
 - [ ] DST
-- [X] XIT
+- [X] XIT (matt)
 - [ ] SHT

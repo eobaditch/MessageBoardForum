@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
     char *command;
     unsigned char * serverHash; 
     char name[BUFSIZE]; 
+    char username[BUFSIZE]; 
     char len [BUFSIZE]; 
     char buf[BUFSIZE];
     int len_s; 
@@ -83,6 +84,21 @@ int main(int argc, char *argv[]) {
     if (connect(tcpsockfd,(struct sockaddr*) &serveraddr, sizeof(serveraddr)) < 0){
         error ("ERROR connecting"); 
     }
+    //START AND GET USERNAME
+    printf("Type 'Start' to begin\n");  
+        bzero(buf, BUFSIZE); 
+        scanf("%s", buf); 
+        n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr)); //write(tcpsockfd, buf, strlen(buf)); 
+        n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&serveraddr, &serverlen); 
+        printf("%s", buf); 
+        scanf("%s", username); 
+        bzero(buf, BUFSIZE); 
+        strcpy(buf, username); 
+        n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &serveraddr, sizeof(serveraddr)); 
+        if (n<0)
+            error("Error in sending username\n"); 
+
+
 
     while(1){
         /* Handle password request, not yet owrking
@@ -92,6 +108,8 @@ int main(int argc, char *argv[]) {
             error("ERROR in pass recvfrom");
         printf("Echo from server: %s", buf);
         */
+        //GETUSERNAME
+       bzero(buf, BUFSIZE); 
 
         printf("Enter Command: "); 
         scanf("%s", buf);  
@@ -106,11 +124,24 @@ int main(int argc, char *argv[]) {
             bzero(buf, BUFSIZE);
             printf("Please enter the admin password: ");
             scanf("%s", buf);
-            n = sendto(udpsockfd, buf, strlen(buf), 0, &serveraddr, serverlen);
+            n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&serveraddr, sizeof(serverlen));
             if (n < 0)
                 error("Error in password udp sendto");
         } else if(strcmp(buf, "CRT") == 0){
             //Create Board
+            bzero(buf, BUFSIZE); 
+            printf("Please enter the name of the board to be created: "); 
+            scanf("%s", buf); 
+            n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &serveraddr, sizeof(serveraddr)); 
+            if (n<0)
+                error("Error in creating board\n"); 
+            //receive confirmation or error
+            bzero(buf, BUFSIZE); 
+            n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&serveraddr, &serverlen); 
+            if (n<0)
+                error("Error in recieving board creation confirmation\n");
+            printf("%s\n", buf); 
+
         } else if (strcmp(buf, "MSG") == 0){
             //Leave Message
         } else if (strcmp(buf, "DLT") == 0){
