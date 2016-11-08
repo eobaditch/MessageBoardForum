@@ -109,7 +109,23 @@ int main(int argc, char *argv[]) {
             n = sendto(udpsockfd, buf, strlen(buf), 0, &serveraddr, serverlen);
             if (n < 0)
                 error("Error in password udp sendto");
-        }
+        } else if(strcmp(buf, "CRT") == 0){
+            //Create Board
+        } else if (strcmp(buf, "MSG") == 0){
+            //Leave Message
+        } else if (strcmp(buf, "DLT") == 0){
+            //Delete Message
+        } else if (strcmp(buf, "EDT") == 0){
+            //Edit Message Board
+        } else if (strcmp(buf, "LIS") == 0){
+            //List Boards
+        } else if (strcmp(buf, "RDB") == 0){
+            //Read a board
+        } else if (strcmp(buf, "APN") == 0){
+            //Append file
+        } else if (strcmp(buf, "DWN") == 0){
+            //Download file
+        } 
         bzero(buf, BUFSIZE); 
     }
 

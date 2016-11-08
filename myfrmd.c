@@ -139,8 +139,25 @@ int main(int argc, char *argv[]) {
 			if (strcmp(com, "XIT") == 0) {
 				close(sockfd2);
 				break;
-			}
-
+		    } else if (strcmp(com, "SHT") == 0) {
+                //Shut down
+            } else if(strcmp(com, "CRT") == 0){
+                //Create Board
+            } else if (strcmp(com, "MSG") == 0){
+                //Leave Message
+            } else if (strcmp(com, "DLT") == 0){
+                //Delete Message
+            } else if (strcmp(com, "EDT") == 0){
+                //Edit Message Board
+            } else if (strcmp(com, "LIS") == 0){
+                //List Boards
+            } else if (strcmp(com, "RDB") == 0){
+                //Read a board
+            } else if (strcmp(com, "APN") == 0){
+                //Append file
+            } else if (strcmp(com, "DWN") == 0){
+                //Download file
+            }
             n = write(sockfd2, buf, strlen(buf));
 
             if(n < 0)
