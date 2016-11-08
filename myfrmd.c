@@ -1,7 +1,7 @@
 /* TCP/UDP MessageBoardForum Server
  * Emily Obaditch - eobaditc
  * Teddy Brombach - tbrombac
- * Matt Reilly - mreill11
+ * Matthew Reilly - mreill11
  *
  * This is our implementation of a Simple FTP Server, written in C.
  */
