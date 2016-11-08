@@ -36,7 +36,8 @@ void error(char *msg) {
 }
 
 int main(int argc, char *argv[]) {
-    int sockfd; // socket 
+    int tcpsockfd; // socket
+    int udpsockfd;
     int sockfd2;
     MHASH td; 
     int port; // port number
@@ -68,13 +69,18 @@ int main(int argc, char *argv[]) {
     port = atoi(argv[1]);
 
     // create the parent socket
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) 
-        error("ERROR opening socket");
+    tcpsockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (tcpsockfd < 0) 
+        error("ERROR opening tcp socket");
+
+    tcpsockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (tcpsockfd < 0) 
+        error("ERROR opening udp socket");
 
     // setsockopt: rerun server faster
     optval = 1;
-    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int));
+    setsockopt(tcpsockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int));
+    setsockopt(udpsockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int));
 
     // build server internet address
     bzero((char *) &serveraddr, sizeof(serveraddr));
@@ -83,19 +89,19 @@ int main(int argc, char *argv[]) {
     serveraddr.sin_port = htons((unsigned short)port);
 
     // bind the parent socket and port
-    if (bind(sockfd, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0) 
+    if (bind(tcpsockfd, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0) 
         error("ERROR on binding");
 
     //Listen 
     while(1){
 
-        if (listen(sockfd, 5) < 0)
+        if (listen(tcpsockfd, 5) < 0)
             error("Error on binding");
 
         // Wait for message, send response
         clientlen = sizeof(clientaddr);
     
-        sockfd2 = accept( sockfd, (struct sockaddr *) &clientaddr, &clientlen);
+        sockfd2 = accept( tcpsockfd, (struct sockaddr *) &clientaddr, &clientlen);
         if(sockfd2 < 0)
             error("Error on accept");
         

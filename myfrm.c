@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     char filecontent[BUFSIZE]; 
     struct sockaddr_in serveraddr;
     struct hostent *server;
-    int sockfd, filesize, portno, n, k, serverlen;
+    int udpsockfd, tcpsockfd, filesize, portno, n, k, serverlen;
     char *hostname;
     char *command;
     unsigned char * serverHash; 
@@ -57,11 +57,16 @@ int main(int argc, char *argv[]) {
 
     bzero(buf, BUFSIZE);
     // Create the socket 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
+    tcpsockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0){
-        error("ERROR opening socket");
+        error("ERROR opening tcp socket");
     }
+
+    udpsockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0){
+        error("ERROR opening udp socket");
+    }
+
     // Load DNS Entry
     server = gethostbyname(hostname);
     if (server == NULL) {
@@ -76,7 +81,7 @@ int main(int argc, char *argv[]) {
     serveraddr.sin_port = htons(portno);
 
     /* connect */
-    if (connect(sockfd,(struct sockaddr*) &serveraddr, sizeof(serveraddr)) < 0){
+    if (connect(tcpsockfd,(struct sockaddr*) &serveraddr, sizeof(serveraddr)) < 0){
         error ("ERROR connecting"); 
     }
 
