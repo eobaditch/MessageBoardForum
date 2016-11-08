@@ -72,8 +72,8 @@ int main(int argc, char *argv[]) {
         error("ERROR opening tcp socket");
 
     // create the UDP socket
-    tcpsockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (tcpsockfd < 0) 
+    udpsockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udpsockfd < 0) 
         error("ERROR opening udp socket");
 
     // setsockopt: rerun server faster
@@ -89,7 +89,10 @@ int main(int argc, char *argv[]) {
 
     // bind the parent TCP socket and port
     if (bind(tcpsockfd, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0) 
-        error("ERROR on binding");
+        error("ERROR on tcp binding");
+
+    if (bind(udpsockfd, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0)
+        error("ERROR on udp binding");
 
     // Listen 
     while(1){
@@ -100,9 +103,10 @@ int main(int argc, char *argv[]) {
         // Wait for message, send response
         clientlen = sizeof(clientaddr);
     
+        // Accept tcp socket
         sockfd2 = accept( tcpsockfd, (struct sockaddr *) &clientaddr, &clientlen);
         if(sockfd2 < 0)
-            error("Error on accept");
+            error("Error on tcp accept");
         
         hostp = gethostbyaddr((const char *)&clientaddr.sin_addr.s_addr, sizeof(clientaddr.sin_addr.s_addr), AF_INET);
 
@@ -114,11 +118,17 @@ int main(int argc, char *argv[]) {
 
         printf("Server connected with %s (%s)\n", hostp->h_name, hostaddrp);
 
+        bzero(buf, BUFSIZE);
+        strcpy(buf, "Enter admin password: ");
+        n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &clientaddr, clientlen);
+        if (n < 0)
+            error("ERROR in pass request");
+
         while(1) {
             // receive a datagram from a client
             bzero(buf, BUFSIZE);
             n = read(sockfd2, buf, BUFSIZE);
-            strcpy(com,buf);
+            strcpy(com, buf);
 			
             if(n < 0)
                error("Error reading from socket");
@@ -127,7 +137,7 @@ int main(int argc, char *argv[]) {
 				close(sockfd2);
 				break;
 			}
-            
+
             n = write(sockfd2, buf, strlen(buf));
 
             if(n < 0)

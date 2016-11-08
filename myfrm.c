@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
         error("ERROR opening tcp socket");
     }
 
-    udpsockfd = socket(AF_INET, SOCK_STREAM, 0);
+    udpsockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (udpsockfd < 0){
         error("ERROR opening udp socket");
     }
@@ -85,6 +85,12 @@ int main(int argc, char *argv[]) {
     }
 
     while(1){
+        bzero(buf, BUFSIZE);
+        n = recvfrom(udpsockfd, buf, strlen(buf), 0, &serveraddr, &serverlen);
+        if (n < 0) 
+            error("ERROR in pass recvfrom");
+        printf("Echo from server: %s", buf);
+
         printf("Enter Command: "); 
         scanf("%s", buf);  
         n = write(tcpsockfd, buf, strlen(buf)); 
@@ -94,7 +100,14 @@ int main(int argc, char *argv[]) {
 		if (strcmp(buf, "XIT") == 0) {
 			printf("The connection has been closed.\n");
 			exit(0);
-		}
+		} else if (strcmp(buf, "SHT") == 0) {
+            bzero(buf, BUFSIZE);
+            printf("Please enter the admin password: ");
+            scanf("%s", buf);
+            n = sendto(udpsockfd, buf, strlen(buf), 0, &serveraddr, serverlen);
+            if (n < 0)
+                error("Error in password udp sendto");
+        }
         bzero(buf, BUFSIZE); 
     }
 
