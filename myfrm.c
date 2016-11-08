@@ -3,7 +3,7 @@
  * Teddy Brombach - tbrombac
  * Matthew Reilly - mreill11
  *
- * This is our implementation of a Simple FTP Client, written in C.
+ * This is our implementation of a MessageBoardForum Client, written in C.
  */
 
 #include <stdio.h>
@@ -23,7 +23,6 @@
 
 #define BUFSIZE 4096
 
-void readFile(char *dest, char *fname);
 void error(char *msg);
 
 int main(int argc, char *argv[]) {
@@ -100,20 +99,6 @@ int main(int argc, char *argv[]) {
     }
 
     return 0; 
-}
-
-// Read file into buffer
-void readFile(char *dest, char *fname) {
-    FILE *fp = fopen(fname, "r");
-    if (fp != NULL) {
-        size_t new_len = fread(dest, sizeof(char), BUFSIZE, fp);
-        if (ferror(fp) != 0) {
-            fputs("Error reading file", stderr);
-        } else {
-            dest[new_len++] = '\0';
-        }
-        fclose(fp);
-    }
 }
 
 // error handling
