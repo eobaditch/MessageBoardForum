@@ -58,12 +58,12 @@ int main(int argc, char *argv[]) {
     bzero(buf, BUFSIZE);
     // Create the socket 
     tcpsockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0){
+    if (tcpsockfd < 0){
         error("ERROR opening tcp socket");
     }
 
     udpsockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0){
+    if (udpsockfd < 0){
         error("ERROR opening udp socket");
     }
 
