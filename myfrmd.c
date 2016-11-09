@@ -217,6 +217,10 @@ int main(int argc, char *argv[]) {
 
                     // Shut down server - delete all board files and appended files, close all sockets
                     deleteFiles();
+					int i;
+					for (i = 0; i < boardCount; i++) {
+						// delete files	
+					}
                     bzero(boards, MAX_BOARDS);
                     boardCount = 0;
                     close(udpsockfd);
@@ -379,7 +383,7 @@ void deleteFiles() {
     while ( (next_file = readdir(theFolder)) != NULL )
     {
         // build the path for each file in the folder
-        sprintf(filepath, "%s/%s", "path/of/folder", next_file->d_name);
+        sprintf(filepath, "%s/%s", ".", next_file->d_name);
         if (has_txt_extension(filepath))
             remove(filepath);
     }
