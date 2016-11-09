@@ -5,7 +5,7 @@
 ### TODO:
 
 login info: 
-usernames and passwords are stored in "users.txt" file (if it doesnt exist do touch users.txt before running) 
+user:q  names and passwords are stored in "users.txt" file (if it doesnt exist do touch users.txt before running) 
 info is saved like:
     user1
     password for user1
@@ -24,4 +24,4 @@ boards are stored in "boards.txt" (works even if boards doesnt exist at first)
 - [ ] DWN
 - [ ] DST
 - [X] XIT (matt)
-- [ ] SHT
+- [in progress ] SHT (matt)
