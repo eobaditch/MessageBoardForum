@@ -38,7 +38,9 @@ int createFile(char *name, char * username);
 void readFile(char *dest, char *fname); 
 int checkUser(char*username); 
 int login(char * username, char * password, int newUser); 
-void addBoard(char * name); 
+void addBoard(char * name);
+void deleteFiles();
+bool has_txt_extension(char const *name);
 
 int main(int argc, char *argv[]) {
     int tcpsockfd;                      // tcp socket
@@ -66,7 +68,7 @@ int main(int argc, char *argv[]) {
     char* path, filename;
     char choice[BUFSIZE]; 
     char * boards[MAX_BOARDS]; 
-    int boardCount =0; 
+    int boardCount = 0; 
 
     // parse command line arguments
     if (argc != 2) {
@@ -182,14 +184,6 @@ int main(int argc, char *argv[]) {
         }//end Start blcok
         
         while(1) {
-
-            /*  Password request, not yet working
-            bzero(buf, BUFSIZE);
-            strcpy(buf, "Enter admin password: ");
-            n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &clientaddr, clientlen);
-            if (n < 0)
-                error("ERROR in pass request");
-            */
                         
             // receive a datagram from a client
             bzero(buf, BUFSIZE);
@@ -204,6 +198,34 @@ int main(int argc, char *argv[]) {
 				break;
 		    } else if (strcmp(com, "SHT") == 0) {
                 //Shut down
+                // receive admin password from client
+                bzero(buf, BUFSIZE);
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
+                if (n < 0)
+                    error("ERROR in receiving password");
+
+                bzero(buf, BUFSIZE);
+                if (strcmp(password, buf) != 0) {       // Password incorrect
+                    error("PASSWORD INCORRECT");
+                    strcpy(buf, "Password incorrect.");
+                    n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, &clientlen);
+                    if (n < 0)
+                        error("ERROR in password incorrect message");
+                } else {
+                    strcpy(buf, "Password correct. Shutting down.");
+                    n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, &clientlen);
+                    if (n < 0)
+                        error("ERROR in password correct, shutting down message");
+
+                    // Shut down server - delete all board files and appended files, close all sockets
+                    deleteFiles();
+                    bzero(boards, MAX_BOARDS);
+                    boardCount = 0;
+                    close(udpsockfd);
+                    close(tcpsockfd);
+                    break;
+                }
+
             } else if(strcmp(com, "CRT") == 0){
                 //Create Board
                 bzero(buf, BUFSIZE); 
@@ -340,4 +362,27 @@ void readFile(char *dest, char *fname) {
         }
         fclose(fp);
     }
+}
+
+void deleteFiles() {
+    // These are data types defined in the "dirent" header
+    printf("Deleting files...\n");
+    DIR *theFolder = opendir(".");
+    struct dirent *next_file;
+    char filepath[256];
+
+    while ( (next_file = readdir(theFolder)) != NULL )
+    {
+        // build the path for each file in the folder
+        sprintf(filepath, "%s/%s", "path/of/folder", next_file->d_name);
+        if (has_txt_extension(filepath))
+            remove(filepath);
+    }
+    closedir(theFolder);
+    return 0;
+}
+
+bool has_txt_extension(char const *name) {
+    size_t len = strlen(name);
+    return len > 4 && strcmp(name + len - 4, ".txt") == 0;
 }

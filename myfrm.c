@@ -137,6 +137,21 @@ int main(int argc, char *argv[]) {
             n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&serveraddr, sizeof(serverlen));
             if (n < 0)
                 error("Error in password udp sendto");
+
+            // receive message from server
+            bzero(buf, BUFSIZE);
+            n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&serveraddr, &serverlen); 
+            if (n < 0)
+                error("Error in recieving shutdown confirmation\n");
+
+            if (strcmp(buf, "Password incorrect.") == 0) {  // Password incorrect
+                printf("%s\n", buf);
+            } else {                                        // Password correct
+                printf("Shutting down.\n");
+                close(udpsockfd);
+                close(tcpsockfd);
+                exit(0);
+            }
         } else if(strcmp(buf, "CRT") == 0){
             //Create Board
             bzero(buf, BUFSIZE); 
