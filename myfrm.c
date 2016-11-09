@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
         error ("ERROR connecting"); 
     }
     //START AND GET USERNAME
-        printf("Type 'Start' to begin\n");  
+        printf("Type 'Start' to begin: ");  
         bzero(buf, BUFSIZE); 
         scanf("%s", buf); 
         n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr)); //write(tcpsockfd, buf, strlen(buf)); 
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
             bzero(buf, BUFSIZE);
             printf("Please enter the admin password: ");
             scanf("%s", buf);
-            n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&serveraddr, sizeof(serverlen));
+            n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &serveraddr, sizeof(serveraddr));
             if (n < 0)
                 error("Error in password udp sendto");
 

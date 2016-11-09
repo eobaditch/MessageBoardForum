@@ -69,16 +69,18 @@ int main(int argc, char *argv[]) {
     char choice[BUFSIZE]; 
     char * boards[MAX_BOARDS]; 
     int boardCount = 0; 
+	char adminPassword[BUFSIZE];
 
     // parse command line arguments
-    if (argc != 2) {
+    if (argc != 3) {
         fprintf(stderr, "usage: %s <port> <password>\n", argv[0]);
         exit(1);
     }
 
     // Store command line arguments
     port = atoi(argv[1]);
-    //password = argv[2];
+	strcpy(adminPassword, argv[2]);
+	printf("%s\n", adminPassword);
 
     // create the TCP socket
     tcpsockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -201,13 +203,15 @@ int main(int argc, char *argv[]) {
                 // receive admin password from client
                 bzero(buf, BUFSIZE);
                 n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
-                if (n < 0)
+                printf("%s\n", buf);
+				if (n < 0)
                     error("ERROR in receiving password");
 
-                bzero(buf, BUFSIZE);
-                if (strcmp(password, buf) == 0) {       // Password correct
-                    strcpy(buf, "Password correct. Shutting down.");
-                    n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, &clientlen);
+               // bzero(buf, BUFSIZE);
+                if (strcmp(adminPassword, buf) == 0) {       // Password correct
+                    bzero(buf, BUFSIZE);
+					strcpy(buf, "Password correct. Shutting down.");
+                    n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen);
                     if (n < 0)
                         error("ERROR in password correct, shutting down message");
 
@@ -219,9 +223,10 @@ int main(int argc, char *argv[]) {
                     close(tcpsockfd);
                     break;
                 } else {
+					bzero(buf, BUFSIZE);
                     error("PASSWORD INCORRECT");
                     strcpy(buf, "Password incorrect.");
-                    n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, &clientlen);
+                    n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen);
                     if (n < 0)
                         error("ERROR in password incorrect message");
                 }
