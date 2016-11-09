@@ -160,6 +160,11 @@ int main(int argc, char *argv[]) {
             //Edit Message Board
         } else if (strcmp(buf, "LIS") == 0){
             //List Boards
+            bzero(buf, BUFSIZE); 
+            n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&serveraddr, &serverlen);
+            if(n<0)
+                error("Error in receving password request\n"); 
+            printf("%s\n", buf); 
         } else if (strcmp(buf, "RDB") == 0){
             //Read a board
         } else if (strcmp(buf, "APN") == 0){

@@ -35,7 +35,7 @@ void error(char *msg) {
 }
 
 int createFile(char *name, char * username); 
-
+void readFile(char *dest, char *fname); 
 int checkUser(char*username); 
 int login(char * username, char * password, int newUser); 
 void addBoard(char * name); 
@@ -240,7 +240,11 @@ int main(int argc, char *argv[]) {
                 //Edit Message Board
             } else if (strcmp(com, "LIS") == 0){
                 //List Boards
-                bzero(buf, BUFSIZE); 
+                bzero(buf, BUFSIZE);
+                readFile(buf, "boards.txt"); 
+                n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
+                if(n<0)
+                    error("Error in sending LIS\n");
             
             } else if (strcmp(com, "RDB") == 0){
                 //Read a board
@@ -318,8 +322,22 @@ int login(char * username, char * password, int newUser){
 void addBoard(char * name){
 
     FILE *fp; 
-    fp = fopen("boards.txt", "a"); 
-    fprintf(fp, name); 
+    fp = fopen("boards.txt", "a");
+    fprintf(fp, name);
+    fprintf(fp, "\n"); 
     fclose(fp); 
 
+}
+
+void readFile(char *dest, char *fname) {
+    FILE *fp = fopen(fname, "r");
+    if (fp != NULL) {
+        size_t new_len = fread(dest, sizeof(char), BUFSIZE, fp);
+        if (ferror(fp) != 0) {
+            fputs("Error reading file", stderr);
+        } else {
+            dest[new_len++] = '\0';
+        }
+        fclose(fp);
+    }
 }

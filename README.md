@@ -12,12 +12,13 @@ info is saved like:
     user2
     password for user2
     etc......
+boards are stored in "boards.txt" (works even if boards doesnt exist at first)
 
 - [X] CRT (emily)
 - [ ] MSG
 - [ ] DLT
 - [ ] EDT
-- [ ] LIS
+- [X] LIS (emily)
 - [ ] RDB
 - [ ] APN
 - [ ] DWN
