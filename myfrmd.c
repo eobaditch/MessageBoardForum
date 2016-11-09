@@ -55,6 +55,7 @@ int main(int argc, char *argv[]) {
     int optval;                         // flag value for setsockopt
     int n, k, i;                        // message size, key size, counter
     short len;
+    int newUser; 
     char *name;
     char username[BUFSIZE]; 
     char *len_string; 
@@ -154,7 +155,7 @@ int main(int argc, char *argv[]) {
                     error("Error in recieving password\n"); 
                 strcpy(password, buf); 
                 printf("%s pw: %s\n", username, password); 
-                //login(username, password, 1); 
+                newUser = 1;  
             }
             else{
                 bzero(buf, BUFSIZE); 
@@ -168,7 +169,14 @@ int main(int argc, char *argv[]) {
                     error("Error in recieving password\n"); 
                 strcpy(password, buf); 
                 printf("%s pw: %s\n", username, password); 
-                //login(username, password, 0); 
+                newUser = 0; 
+            }
+            printf("newUser (yes =1): %d\n", newUser); 
+            int valid_login = login(username, password, newUser); 
+            printf("%d\n", valid_login); 
+            if(valid_login == 0){
+                printf("login invalid\n");
+                exit(1); 
             }
         }//end Start blcok
         
@@ -272,4 +280,33 @@ int checkUser(char * username){
     return 0; 
 }
 
+int login(char * username, char * password, int newUser){
+    char  fileBuf[BUFSIZE]; 
+    char fileBuf2[BUFSIZE]; 
+    FILE *fp; 
+    if(newUser){
+        //add username and password to users.txt file
+        fp = fopen("users.txt", "a"); 
+        sprintf(fileBuf, "%s\n%s\n", username, password); 
+        fprintf(fp, fileBuf); 
+        fclose(fp);
+        return 1; 
+    } else{
+        //compare passwords
+        fp = fopen("users.txt", "r"); 
+        while(fgets(fileBuf2, sizeof(fileBuf2), fp)){
+            if(fgets(fileBuf2, sizeof(fileBuf2), fp) != NULL){
+                fileBuf2[strlen(fileBuf2)-1]='\0'; 
+                if(strcmp(fileBuf2, password) == 0){
+                    printf("%s vs %s\n", fileBuf2, password); 
+                    fclose(fp); 
+                    return 1; 
+                }
+            }
+        }
+    }
+    fclose(fp); 
+    return 0; 
 
+
+}
