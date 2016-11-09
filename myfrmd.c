@@ -205,13 +205,7 @@ int main(int argc, char *argv[]) {
                     error("ERROR in receiving password");
 
                 bzero(buf, BUFSIZE);
-                if (strcmp(password, buf) != 0) {       // Password incorrect
-                    error("PASSWORD INCORRECT");
-                    strcpy(buf, "Password incorrect.");
-                    n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, &clientlen);
-                    if (n < 0)
-                        error("ERROR in password incorrect message");
-                } else {
+                if (strcmp(password, buf) == 0) {       // Password correct
                     strcpy(buf, "Password correct. Shutting down.");
                     n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, &clientlen);
                     if (n < 0)
@@ -224,6 +218,12 @@ int main(int argc, char *argv[]) {
                     close(udpsockfd);
                     close(tcpsockfd);
                     break;
+                } else {
+                    error("PASSWORD INCORRECT");
+                    strcpy(buf, "Password incorrect.");
+                    n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, &clientlen);
+                    if (n < 0)
+                        error("ERROR in password incorrect message");
                 }
 
             } else if(strcmp(com, "CRT") == 0){
