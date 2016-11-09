@@ -38,6 +38,7 @@ int createFile(char *name, char * username);
 
 int checkUser(char*username); 
 int login(char * username, char * password, int newUser); 
+void addBoard(char * name); 
 
 int main(int argc, char *argv[]) {
     int tcpsockfd;                      // tcp socket
@@ -56,7 +57,7 @@ int main(int argc, char *argv[]) {
     int n, k, i;                        // message size, key size, counter
     short len;
     int newUser; 
-    char *name;
+    char name[BUFSIZE];
     char username[BUFSIZE]; 
     char *len_string; 
     unsigned char * serverHash; 
@@ -211,6 +212,7 @@ int main(int argc, char *argv[]) {
                     error("Error in creating board\n"); 
                 if(createFile(buf, username) == 0){
                     //successfully created board
+                    strcpy(name, buf); 
                     bzero(buf, BUFSIZE); 
                     strcpy(buf, "successfully created board"); 
                     n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
@@ -218,7 +220,9 @@ int main(int argc, char *argv[]) {
                         error("Error in sending board creation confirmation\n");
                     //keep track of boards created in current program
                     boards[boardCount] = name; 
-                    boardCount++; 
+                    boardCount++;
+                    //add board to full list
+                    addBoard(name); 
 
                 } else{
                     //error in creating board
@@ -236,6 +240,8 @@ int main(int argc, char *argv[]) {
                 //Edit Message Board
             } else if (strcmp(com, "LIS") == 0){
                 //List Boards
+                bzero(buf, BUFSIZE); 
+            
             } else if (strcmp(com, "RDB") == 0){
                 //Read a board
             } else if (strcmp(com, "APN") == 0){
@@ -307,6 +313,13 @@ int login(char * username, char * password, int newUser){
     }
     fclose(fp); 
     return 0; 
+}
 
+void addBoard(char * name){
+
+    FILE *fp; 
+    fp = fopen("boards.txt", "a"); 
+    fprintf(fp, name); 
+    fclose(fp); 
 
 }
