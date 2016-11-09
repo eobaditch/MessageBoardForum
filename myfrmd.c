@@ -309,7 +309,7 @@ int checkUser(char * username){
         fgets(buf, sizeof(buf), fp); //skip password
     }
     fclose(fp); 
-    return 0; 
+	return 0;
 }
 
 int login(char * username, char * password, int newUser){
@@ -379,7 +379,6 @@ void deleteFiles() {
             remove(filepath);
     }
     closedir(theFolder);
-    return 0;
 }
 
 bool has_txt_extension(char const *name) {
