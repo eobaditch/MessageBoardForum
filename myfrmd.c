@@ -43,6 +43,7 @@ void addBoard(char * name);
 void deleteFiles();
 bool has_txt_extension(char const *name);
 void update_boards(char * boards[MAX_BOARDS], int boardCount); 
+int add_message(char * board, char * message); 
 
 int main(int argc, char *argv[]) {
     int tcpsockfd;                      // tcp socket
@@ -280,7 +281,16 @@ int main(int argc, char *argv[]) {
                     error("Error in receiving message name\n"); 
                 strcpy(message, buf);
                 printf("%s\n", message); 
-            
+                bzero(buf, BUFSIZE); 
+                int message_result = add_message(name, message); 
+                if(message_result){
+                    strcpy(buf, "Succes in posting message\n"); 
+                }else{
+                    strcpy(buf, "Error in posting message\n"); 
+                }
+                n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
+                if(n<0)
+                    error("Error in sending MSG confirmation\n");
             
             } else if (strcmp(com, "DLT") == 0){
                 //delete message
@@ -469,4 +479,18 @@ void update_boards(char * boards[MAX_BOARDS], int boardCount){
     }
     fclose(fp); 
 
+}
+
+int add_message(char * board, char * message){
+    
+    FILE *fp; 
+    if (!(fp = fopen(board, "r"))){
+        return 0; 
+    }
+    fclose(fp); 
+    fp = fopen(board, "a"); 
+    fprintf(fp, "%s\n", message); 
+    fclose(fp); 
+    return 1; 
+    
 }
