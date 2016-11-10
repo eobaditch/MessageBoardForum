@@ -22,6 +22,6 @@ boards are stored in "boards.txt" (works even if boards doesnt exist at first)
 - [ ] RDB
 - [ ] APN
 - [ ] DWN
-- [ ] DST
+- [X] DST (emily)
 - [X] XIT (matt)
 - [in progress ] SHT (matt)

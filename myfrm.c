@@ -170,7 +170,21 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(buf, "MSG") == 0){
             //Leave Message
         } else if (strcmp(buf, "DLT") == 0){
-            //Delete Message
+            //delete message
+        } else if (strcmp(buf, "DST") == 0){
+            //Delete board
+            bzero(buf, BUFSIZE); 
+            printf("Enter the name of the board to be destroyed: "); 
+            scanf("%s", buf);         
+            n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &serveraddr, sizeof(serveraddr)); 
+            if(n<0)
+                error("Error in sending board to destroy\n"); 
+            bzero(buf, BUFSIZE); 
+            n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&serveraddr, &serverlen); 
+            if (n<0)
+                error("Error in recieving board DST confirmation\n"); 
+            printf("%s\n", buf); 
+        
         } else if (strcmp(buf, "EDT") == 0){
             //Edit Message Board
         } else if (strcmp(buf, "LIS") == 0){

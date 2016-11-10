@@ -34,6 +34,7 @@ void error(char *msg) {
   exit(1);
 }
 
+int destroyBoard(char *name, char * username); 
 int createFile(char *name, char * username); 
 void readFile(char *dest, char *fname); 
 int checkUser(char*username); 
@@ -41,6 +42,7 @@ int login(char * username, char * password, int newUser);
 void addBoard(char * name);
 void deleteFiles();
 bool has_txt_extension(char const *name);
+void update_boards(char * boards[MAX_BOARDS], int boardCount); 
 
 int main(int argc, char *argv[]) {
     int tcpsockfd;                      // tcp socket
@@ -257,7 +259,32 @@ int main(int argc, char *argv[]) {
             } else if (strcmp(com, "MSG") == 0){
                 //Leave Message
             } else if (strcmp(com, "DLT") == 0){
-                //Delete Message
+                //delete message
+            } else if (strcmp(com, "DST") == 0){
+                //Delete board
+                bzero(buf, BUFSIZE); 
+                //get name of board to be destroyed
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
+                printf("%s\n", buf); 
+                int dst = destroyBoard(buf, username);  
+                for(i = 0; i<boardCount; i++){
+                    printf("%s\n", boards[i]); 
+                    if (strcmp(boards[i],buf)==0){
+                            boards[i] = '\0'; 
+                            boardCount --; 
+                    }
+                }
+                bzero(buf, BUFSIZE); 
+                if (dst){
+                    update_boards(boards, boardCount); 
+                    strcpy(buf, "Successfully destroyed\n"); 
+                }else{
+                    strcpy(buf, "Error in destruction\n"); 
+                }
+                n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
+                if(n<0)
+                    error("Error in sending DST confirmation\n"); 
+
             } else if (strcmp(com, "EDT") == 0){
                 //Edit Message Board
             } else if (strcmp(com, "LIS") == 0){
@@ -289,7 +316,7 @@ int createFile(char * name, char * username){
    char s[BUFSIZE]; 
    
    fp = fopen(name, "w+"); 
-   sprintf(s, "Created by: %s\n", username); 
+   sprintf(s, "%s\n", username); 
    fprintf(fp, "%s", s);  
    int result = fclose(fp); 
     return result; 
@@ -384,4 +411,37 @@ void deleteFiles() {
 bool has_txt_extension(char const *name) {
     size_t len = strlen(name);
     return len > 4 && strcmp(name + len - 4, ".txt") == 0;
+}
+
+int destroyBoard(char * name, char * username){
+    FILE *fp; 
+    FILE *fp2; 
+    char fileBuf[BUFSIZE]; 
+    char command[BUFSIZE]; 
+
+    fp = fopen(name, "r"); 
+    fgets(fileBuf, sizeof(fileBuf), fp); 
+    fileBuf[strlen(fileBuf) -1] = '\0'; 
+    if (strcmp(fileBuf, username) != 0){
+        fclose(fp);
+        return 0; 
+    } else{
+        sprintf(command, "rm %s", name); 
+        system(command); 
+        fclose(fp); 
+        return 1;         
+    }
+
+}
+
+void update_boards(char * boards[MAX_BOARDS], int boardCount){
+
+    FILE *fp; 
+    fp = fopen("boards.txt", "w+"); 
+    int i; 
+    for(i = 0; i<boardCount; i++){
+        fprintf(fp, "%s\n", boards[i]); 
+    }
+    fclose(fp); 
+
 }
