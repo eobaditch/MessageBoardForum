@@ -15,7 +15,7 @@ info is saved like:
 boards are stored in "boards.txt" (works even if boards doesnt exist at first)
 
 - [X] CRT (emily)
-- [ ] MSG
+- [X] MSG (emily)
 - [ ] DLT
 - [ ] EDT
 - [X] LIS (emily)

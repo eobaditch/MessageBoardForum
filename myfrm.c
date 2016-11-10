@@ -177,12 +177,17 @@ int main(int argc, char *argv[]) {
                 error("Error in sending board to leave message\n"); 
             bzero(buf, BUFSIZE); 
             printf("Enter the message you would like to leave: \n"); 
-            scanf("%s", buf); 
+            scanf(" %[^\n]s ", buf); 
+            strcat(buf, username); 
+            printf("%s\n", buf); 
             n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &serveraddr, sizeof(serveraddr)); 
             if(n<0)
                 error("Error in sending message\n"); 
             bzero(buf, BUFSIZE); 
-
+             n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&serveraddr, &serverlen); 
+            if (n<0)
+                error("Error in recieving MSG confirmation\n");
+            printf("%s\n", buf);
         
         } else if (strcmp(buf, "DLT") == 0){
             //delete message
@@ -190,7 +195,7 @@ int main(int argc, char *argv[]) {
             //Delete board
             bzero(buf, BUFSIZE); 
             printf("Enter the name of the board to be destroyed: "); 
-            scanf("%s", buf);         
+            scanf("%s", &buf);         
             n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &serveraddr, sizeof(serveraddr)); 
             if(n<0)
                 error("Error in sending board to destroy\n"); 
