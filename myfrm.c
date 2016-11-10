@@ -111,15 +111,8 @@ int main(int argc, char *argv[]) {
 
 
     while(1){
-        /* Handle password request, not yet owrking
-        bzero(buf, BUFSIZE);
-        n = recvfrom(udpsockfd, buf, strlen(buf), 0, &serveraddr, &serverlen);
-        if (n < 0) 
-            error("ERROR in pass recvfrom");
-        printf("Echo from server: %s", buf);
-        */
         //GETUSERNAME
-       bzero(buf, BUFSIZE); 
+        bzero(buf, BUFSIZE); 
 
         printf("Enter Command: "); 
         scanf("%s", buf);  
@@ -216,6 +209,42 @@ int main(int argc, char *argv[]) {
             printf("%s\n", buf); 
         } else if (strcmp(buf, "RDB") == 0){
             //Read a board
+			bzero(buf, BUFSIZE);
+			printf("Enter the name of the board to read: ");
+			scanf("%s", buf);
+			n = write(tcpsockfd, buf, sizeof(buf));
+			if (n < 0)
+				error("ERROR sending name of board\n");
+
+			bzero(buf, BUFSIZE);
+			n = read(tcpsockfd, buf, sizeof(buf));
+			if (n < 0)
+				error("Error receiving confirmation.\n");
+
+			if (strcmp(buf, "-1") == 0) { 				// Board does not exist
+				printf("Board does not exist.\n");
+			} else { 									// Read board
+				int fileSize = atoi(buf);
+				bzero(buf, BUFSIZE);
+				int rounds;
+				if (fileSize < 4096) {
+					n = read(tcpsockfd, buf, BUFSIZE);
+					if (n < 0)
+						error("Error reading file.\n");
+					printf("%s", buf);
+				} else {
+					rounds = (fileSize + 4095) / 4096;
+					int round_num = 0, i, j;
+					for (i = 0; i < rounds; i++) {
+						n = read(tcpsockfd, buf, BUFSIZE);
+						if (n < 0)
+							error("Error reading big file.\n");
+						printf("%s", buf);
+						bzero(buf, BUFSIZE);
+					}
+					printf("\n");
+				}
+			}
         } else if (strcmp(buf, "APN") == 0){
             //Append file
         } else if (strcmp(buf, "DWN") == 0){
