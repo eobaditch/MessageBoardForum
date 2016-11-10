@@ -40,7 +40,7 @@ void readFile(char *dest, char *fname);
 int checkUser(char*username); 
 int login(char * username, char * password, int newUser); 
 void addBoard(char * name);
-void deleteFiles();
+void deleteBoards();
 bool has_txt_extension(char const *name);
 void update_boards(char * boards[MAX_BOARDS], int boardCount); 
 
@@ -219,11 +219,7 @@ int main(int argc, char *argv[]) {
                         error("ERROR in password correct, shutting down message");
 
                     // Shut down server - delete all board files and appended files, close all sockets
-                    deleteFiles();
-					int i;
-					for (i = 0; i < boardCount; i++) {
-						// delete files	
-					}
+                    //deleteBoards();
                     bzero(boards, MAX_BOARDS);
                     boardCount = 0;
                     close(udpsockfd);
@@ -362,6 +358,29 @@ int checkUser(char * username){
     }
     fclose(fp); 
 	return 0;
+}
+
+void deleteBoards() {
+	FILE *fp;
+	int k;
+	k = remove("rmtest.txt");
+	char buf[256];
+	char *rm;
+	struct stat st;
+	fp = fopen("boards.txt", "r");
+	while (fgets(buf, sizeof(buf), fp)) {
+		printf("File: %s\n", buf);
+		char file[strlen(buf)];
+		strcpy(file, buf);
+		printf("file: %s", file);
+		if (stat(file, &st) == 0 && S_ISREG(st.st_mode)) {
+			if (asprintf(&rm, "rm %s", file) != -1) {
+				printf("RM: %s\n", rm);
+				k = system(rm);
+			}
+		}
+	}
+	fclose(fp);
 }
 
 int login(char * username, char * password, int newUser){
