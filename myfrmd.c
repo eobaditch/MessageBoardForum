@@ -43,7 +43,6 @@ void addBoard(char * name);
 void deleteBoards();
 bool has_txt_extension(char const *name);
 void update_boards(char * boards[MAX_BOARDS], int boardCount); 
-int add_message(char * board, char * message); 
 
 int main(int argc, char *argv[]) {
     int tcpsockfd;                      // tcp socket
@@ -277,16 +276,7 @@ int main(int argc, char *argv[]) {
                     error("Error in receiving message name\n"); 
                 strcpy(message, buf);
                 printf("%s\n", message); 
-                bzero(buf, BUFSIZE); 
-                int message_result = add_message(name, message); 
-                if(message_result){
-                    strcpy(buf, "Succes in posting message\n"); 
-                }else{
-                    strcpy(buf, "Error in posting message\n"); 
-                }
-                n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
-                if(n<0)
-                    error("Error in sending MSG confirmation\n");
+            
             
             } else if (strcmp(com, "DLT") == 0){
                 //delete message
@@ -328,12 +318,65 @@ int main(int argc, char *argv[]) {
             
             } else if (strcmp(com, "RDB") == 0){
                 //Read a board
+				int s;
+				struct stat st;
+				int rounds, j, size, i;
+				int j_limit = 4095;
+				char currBuf[BUFSIZE];
+
+				bzero(buf, BUFSIZE);
+				n = read(tcpsockfd, buf, BUFSIZE);
+				if (n < 0)
+					error("Error reading filename.\n");
+
+				char *name;
+				strcpy(name, buf);
+				bzero(buf, BUFSIZE);
+				if (access(name, F_OK) != -1) { 	// file does not exist
+					s = -1;
+					sprintf(buf, "%s", s);
+					n = write(tcpsockfd, buf, BUFSIZE);
+					if (n < 0)
+						error("Error in sending failure message.\n");
+					break;
+				}
+
+				stat(name, &st);
+				size = st.st_size;
+				bzero(buf, BUFSIZE);
+				sprintf(buf, "%d", size);
+				// Send file size to client
+				n = write(tcpsockfd, buf, BUFSIZE);
+				if (n < 0)
+					error("Error sending file size.\n");
+				
+				char fileBuf[size + 1];
+				readFile(fileBuf, name);
+
+				// Send file to client
+				if (size < 4096) {
+					n = write(tcpsockfd, fileBuf, BUFSIZE);
+					if (n < 0)
+						error("Error sending file.\n");
+				} else {
+					rounds = (size + 4095) / 4096;
+					int round_num = 0;
+					for (i = 0; i < rounds; i++) {
+						for (j = 0; j < 4095; j++) {
+							currBuf[j] = fileBuf[round_num + j];
+						}
+						n = write(tcpsockfd, currBuf, BUFSIZE);
+						round_num += 4096;
+						bzero(currBuf, BUFSIZE);
+					}
+				}
+
             } else if (strcmp(com, "APN") == 0){
                 //Append file
             } else if (strcmp(com, "DWN") == 0){
                 //Download file
             }
-            n = write(sockfd2, buf, strlen(buf));
+			n = write(sockfd2, buf, strlen(buf));
 
             if(n < 0)
                 error("Error reading from socket");
@@ -498,18 +541,4 @@ void update_boards(char * boards[MAX_BOARDS], int boardCount){
     }
     fclose(fp); 
 
-}
-
-int add_message(char * board, char * message){
-    
-    FILE *fp; 
-    if (!(fp = fopen(board, "r"))){
-        return 0; 
-    }
-    fclose(fp); 
-    fp = fopen(board, "a"); 
-    fprintf(fp, "%s\n", message); 
-    fclose(fp); 
-    return 1; 
-    
 }
