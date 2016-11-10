@@ -62,6 +62,7 @@ int main(int argc, char *argv[]) {
     short len;
     int newUser; 
     char name[BUFSIZE];
+    char message[BUFSIZE]; 
     char username[BUFSIZE]; 
     char *len_string; 
     unsigned char * serverHash; 
@@ -267,7 +268,18 @@ int main(int argc, char *argv[]) {
                 }
             } else if (strcmp(com, "MSG") == 0){
                 //Leave Message
-                
+                bzero(buf, BUFSIZE); 
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
+                if(n<0)
+                    error("Error in receiving board name\n"); 
+                strcpy(name, buf);
+                printf("%s\n", name); 
+                bzero(buf, BUFSIZE); 
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
+                if(n<0)
+                    error("Error in receiving message name\n"); 
+                strcpy(message, buf);
+                printf("%s\n", message); 
             
             
             } else if (strcmp(com, "DLT") == 0){
@@ -277,7 +289,8 @@ int main(int argc, char *argv[]) {
                 bzero(buf, BUFSIZE); 
                 //get name of board to be destroyed
                 n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
-                printf("%s\n", buf); 
+                if(n<0)
+                    error("Error in receiving board name\n"); 
                 int dst = destroyBoard(buf, username);  
                 for(i = 0; i<boardCount; i++){
                     printf("%s\n", boards[i]); 
