@@ -169,6 +169,21 @@ int main(int argc, char *argv[]) {
 
         } else if (strcmp(buf, "MSG") == 0){
             //Leave Message
+            bzero(buf, BUFSIZE); 
+            printf("Enter the name of the board to leave a message on: "); 
+            scanf("%s", buf); 
+            n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &serveraddr, sizeof(serveraddr)); 
+            if(n<0)
+                error("Error in sending board to leave message\n"); 
+            bzero(buf, BUFSIZE); 
+            printf("Enter the message you would like to leave: \n"); 
+            scanf("%s", buf); 
+            n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &serveraddr, sizeof(serveraddr)); 
+            if(n<0)
+                error("Error in sending message\n"); 
+            bzero(buf, BUFSIZE); 
+
+        
         } else if (strcmp(buf, "DLT") == 0){
             //delete message
         } else if (strcmp(buf, "DST") == 0){

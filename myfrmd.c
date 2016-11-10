@@ -258,6 +258,9 @@ int main(int argc, char *argv[]) {
                 }
             } else if (strcmp(com, "MSG") == 0){
                 //Leave Message
+                
+            
+            
             } else if (strcmp(com, "DLT") == 0){
                 //delete message
             } else if (strcmp(com, "DST") == 0){
