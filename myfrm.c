@@ -178,6 +178,8 @@ int main(int argc, char *argv[]) {
             bzero(buf, BUFSIZE); 
             printf("Enter the message you would like to leave: \n"); 
             scanf(" %[^\n]s ", buf); 
+            strcat(buf, username); 
+            printf("%s\n", buf); 
             n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *) &serveraddr, sizeof(serveraddr)); 
             if(n<0)
                 error("Error in sending message\n"); 
