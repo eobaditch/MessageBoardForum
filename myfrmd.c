@@ -23,7 +23,6 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <dirent.h>
-#include "uthash.h"
 
 #define BUFSIZE 4096
 #define MAX_BOARDS 100
