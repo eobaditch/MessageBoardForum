@@ -680,6 +680,21 @@ int destroyBoard(char * name, char * username){
     }
 }
 
+int add_message(char * board, char * message, char * command){
+    
+    FILE *fp; 
+    if(strcmp(command, "MSG") == 0){
+        if (!(fp = fopen(board, "r"))){
+            return 0; 
+        }
+    }
+    fp = fopen(board, "a"); 
+    fprintf(fp, "%s\n", message);
+    fclose(fp); 
+    return 1; 
+    
+}
+
 int edit_message(char * name, char * old, char * new){
     FILE *fp, *fp2; 
     char fileBuf[BUFSIZE];  
