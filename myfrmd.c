@@ -35,6 +35,8 @@ void error(char *msg) {
 }
 
 int destroyBoard(char *name, char * username); 
+int dwn_check(char *); 
+int append_check(char * , char *); 
 int createFile(char *name, char * username); 
 void readFile(char *dest, char *fname); 
 int checkUser(char*username); 
@@ -42,6 +44,9 @@ int login(char * username, char * password, int newUser);
 void addBoard(char * name);
 void deleteBoards();
 bool has_txt_extension(char const *name);
+int add_message(char * board, char * message, char * command); 
+int delete_message(char * board, char * message);
+int edit_message(char * name, char * old_message, char * new_message);
 void update_boards(char * boards[MAX_BOARDS], int boardCount); 
 
 int main(int argc, char *argv[]) {
@@ -58,20 +63,26 @@ int main(int argc, char *argv[]) {
     char buf[BUFSIZE];                  // message buffer
     char *hostaddrp;                    // formatted host addr string
     int optval;                         // flag value for setsockopt
-    int n, k, i;                        // message size, key size, counter
+    int n, k, i, size;                  // message size, key size, counter
     short len;
-    int newUser; 
-    char name[BUFSIZE];
-    char message[BUFSIZE]; 
-    char username[BUFSIZE]; 
+    int newUser;                        // determines if user is new 
+    char name[BUFSIZE];                 // holds name of board
+    char message[BUFSIZE];              // message to post 
+    char file[BUFSIZE];                 // file name to append
+    char username[BUFSIZE];         
+    char dwn_name[BUFSIZE]; 
+    char apn_name[BUFSIZE]; 
+    char old_message[BUFSIZE];          // EDT- edit message
+    char new_message[BUFSIZE];          // EDT - edit message
     char *len_string; 
     unsigned char * serverHash; 
-    char com[BUFSIZE];
+    char com[BUFSIZE];                  // command
     char password[BUFSIZE]; 
     char* path, filename;
     char choice[BUFSIZE]; 
     char * boards[MAX_BOARDS]; 
     int boardCount = 0; 
+    int file_size;
 	char adminPassword[BUFSIZE];
 
     // parse command line arguments
@@ -291,6 +302,27 @@ int main(int argc, char *argv[]) {
             
             } else if (strcmp(com, "DLT") == 0){
                 //delete message
+                bzero(buf, BUFSIZE); 
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
+                if(n<0)
+                    error("Error in receiving board name\n"); 
+                strcpy(name, buf);
+                printf("%s\n", name); 
+                bzero(buf, BUFSIZE); 
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
+                if(n<0)
+                    error("Error in receiving message to be deleted\n"); 
+                strcpy(message, buf);
+                printf("%s\n", message); 
+                int delete_result = delete_message(name, message); 
+                bzero(buf, BUFSIZE); 
+                if(delete_result)
+                    strcpy(buf, "Successfully deleted post\n"); 
+                else
+                    strcpy(buf, "Error in deleting post\n"); 
+                n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
+                if(n<0)
+                    error("Error in sending DLT confirmation\n");
             } else if (strcmp(com, "DST") == 0){
                 //Delete board
                 bzero(buf, BUFSIZE); 
@@ -319,6 +351,33 @@ int main(int argc, char *argv[]) {
 
             } else if (strcmp(com, "EDT") == 0){
                 //Edit Message Board
+                bzero(buf, BUFSIZE); 
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
+                if(n<0)
+                    error("Error in receiving board name\n"); 
+                strcpy(name, buf); 
+                bzero(buf, BUFSIZE); 
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
+                if(n<0)
+                    error("Error in receiving message to edit\n"); 
+                strcpy(old_message, buf);
+                strcat(old_message, " "); 
+                strcat(old_message, username); 
+                bzero(buf, BUFSIZE); 
+                n = recvfrom(udpsockfd, buf, BUFSIZE, 0, (struct sockaddr *)&clientaddr, &clientlen);
+                if(n<0)
+                    error("Error in receiving new message \n"); 
+                strcpy(new_message, buf); 
+                bzero(buf, BUFSIZE); 
+                int edit_result = edit_message(name, old_message, new_message); 
+                if(edit_result){
+                    strcpy(buf, "Successfully edited message\n"); 
+                } else {
+                    strcpy(buf, "Error in editing message\n"); 
+                }
+                n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen); 
+                if(n<0)
+                    error("Error in sending EDT confirmation\n");
             } else if (strcmp(com, "LIS") == 0){
                 //List Boards
                 bzero(buf, BUFSIZE);
@@ -390,8 +449,82 @@ int main(int argc, char *argv[]) {
 
             } else if (strcmp(com, "APN") == 0){
                 //Append file
+                bzero(buf, BUFSIZE); 
+                n = read(sockfd2, buf, BUFSIZE); 
+                if(n<0)
+                    error("Error in recieving board name for APN\n"); 
+                strcpy(name, buf); 
+                bzero(buf, BUFSIZE); 
+                n = read(sockfd2, buf, BUFSIZE); 
+                if (n <0)
+                    error("Error in receiving filename for APN\n"); 
+                strcpy(file, buf); 
+                sprintf(apn_name, "%s-%s", name, file); 
+                bzero(buf, BUFSIZE);
+                printf("before check\n"); 
+                int apn_result = append_check(name, file); 
+                printf("%d\n", apn_result); 
+                if(apn_result)
+                    strcpy(buf, "Board exists and file can be created\n"); 
+                else
+                    strcpy(buf, "Error.  File cannot be appended\n"); 
+                n = write(sockfd2, buf, strlen(buf)); 
+                if (n < 0)
+                    error("Error in APN confirmation\n"); 
+                bzero(buf, BUFSIZE); 
+                //get filesize
+                if(apn_result){
+                    n = read(sockfd2, buf, BUFSIZE); 
+                    if(n,0)
+                        error("Error in recieving filesize"); 
+                    file_size = atoi(buf); 
+                    for(i = 0; i < ((BUFSIZE + file_size -1) / BUFSIZE); i++){
+                        bzero(buf, BUFSIZE); 
+                        n = read(sockfd2, buf, BUFSIZE); 
+                        if(n<0)
+                            error("Error in recieving APN data"); 
+                        add_message(apn_name, buf, com); 
+                    }
+                    bzero(buf, BUFSIZE); 
+                    sprintf(buf, "%s appended by %s", file, username); 
+                    add_message(name, buf, com); 
+
+                } // end if(apn_result)
             } else if (strcmp(com, "DWN") == 0){
                 //Download file
+                struct stat st; 
+                bzero(buf, BUFSIZE); 
+                n = read(sockfd2, buf, BUFSIZE); 
+                if(n<0)
+                    error("Error in recieving board name for DWN\n"); 
+                strcpy(name, buf); //board name
+                bzero(buf, BUFSIZE); 
+                n = read(sockfd2, buf, BUFSIZE); 
+                if (n <0)
+                    error("Error in receiving filename for DWN\n"); 
+                strcpy(file, buf); //file name
+                sprintf(dwn_name, "%s-%s", name, file); //naming convention
+                printf("%s\n", dwn_name); 
+                bzero(buf, BUFSIZE);
+                stat(dwn_name, &st);
+                size = st.st_size; 
+                if (!(dwn_check(dwn_name))){
+                    size = -1; 
+                }
+                sprintf(buf, "%d", size); 
+                //send filesize
+                n = write(sockfd2, buf, strlen(buf)); 
+                if (n < 0)
+                    error("Error in sending filesize for DNW\n"); 
+                if(dwn_check(dwn_name) != 0){ 
+                    for(i = 0; i< ((BUFSIZE + size -1) / BUFSIZE); i++){
+                        bzero(buf, BUFSIZE); 
+                        readFile(buf, dwn_name); 
+                        n = write(sockfd2, buf, strlen(buf)); 
+                        if(n<0)
+                            error("Error in sending file in DWN\n"); 
+                    }
+                }
             }
 			n = write(sockfd2, buf, strlen(buf));
 
@@ -545,6 +678,103 @@ int destroyBoard(char * name, char * username){
         fclose(fp); 
         return 1;         
     }
+}
+
+int edit_message(char * name, char * old, char * new){
+    FILE *fp, *fp2; 
+    char fileBuf[BUFSIZE];  
+    char command[BUFSIZE]; 
+    bool found = false; 
+
+
+    if (!(fp = fopen(name, "r"))){
+        printf("here\n"); 
+        return 0; 
+    }
+    fclose(fp); 
+    fp = fopen(name, "r"); 
+    printf("before while\n"); 
+    fp2 = fopen("temp.txt", "w+"); 
+    while(fgets(fileBuf, sizeof(fileBuf), fp) != NULL){ //!feof(fp)){
+        printf("%s\n", fileBuf); 
+        fileBuf[strlen(fileBuf) -1 ] = '\0'; 
+        if (strcmp(fileBuf, old) == 0){
+            found = true; 
+            fprintf(fp2, "%s\n", new); 
+        } else{
+            fprintf(fp2, "%s\n", fileBuf); 
+        }
+        bzero(fileBuf, BUFSIZE); 
+    }
+    fclose(fp); 
+    fclose(fp2); 
+    sprintf(command, "mv temp.txt %s", name); 
+    system(command);
+    if (found)
+        return 1; 
+
+    return 0;    
+}
+
+int delete_message(char * board, char * message){
+
+    FILE *fp, *fp2; 
+    char fileBuf[BUFSIZE];  
+    char command[BUFSIZE]; 
+    bool found = false; 
+
+
+    if (!(fp = fopen(board, "r"))){
+        return 0; 
+    }
+    fclose(fp); 
+    fp = fopen(board, "r"); 
+    fp2 = fopen("temp.txt", "w+"); 
+    while(fgets(fileBuf, sizeof(fileBuf), fp) != NULL){ 
+        printf("%s\n", fileBuf); 
+        fileBuf[strlen(fileBuf) -1 ] = '\0'; 
+        if (strcmp(fileBuf, message) == 0){
+            found = true; 
+        } else{
+            fprintf(fp2, "%s\n", fileBuf); 
+        }
+        bzero(fileBuf, BUFSIZE); 
+    }
+    fclose(fp); 
+    fclose(fp2); 
+    sprintf(command, "mv temp.txt %s", board); 
+    system(command);
+    if (found)
+        return 1; 
+
+    return 0;   
+
+}
+
+int append_check(char * board, char * file){
+    
+    char filename[BUFSIZE]; 
+    sprintf(filename, "%s-%s", board, file); //required naming convention
+
+    //if board does not exist 
+    if (!(access(board, F_OK) != -1)){
+        return 0; 
+    }
+    //if file with required name already exists or attachment already exists
+    if( access(filename, F_OK) != -1 ){
+        return 0; 
+    }
+    
+    return 1; 
+
+}
+
+int dwn_check(char * name){
+
+    if (!(access(name, F_OK) != -1)){
+        return 0; 
+    }
+    return 1; 
 
 }
 
