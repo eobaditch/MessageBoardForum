@@ -220,7 +220,7 @@ int main(int argc, char *argv[]) {
 			n = read(tcpsockfd, buf, sizeof(buf));
 			if (n < 0)
 				error("Error receiving confirmation.\n");
-
+			printf("Filesize: %s\n", buf);
 			if (strcmp(buf, "-1") == 0) { 				// Board does not exist
 				printf("Board does not exist.\n");
 			} else { 									// Read board

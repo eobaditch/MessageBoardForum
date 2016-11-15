@@ -214,12 +214,23 @@ int main(int argc, char *argv[]) {
                 if (strcmp(adminPassword, buf) == 0) {       // Password correct
                     bzero(buf, BUFSIZE);
 					strcpy(buf, "Password correct. Shutting down.");
+					printf("%s\n", buf);
                     n = sendto(udpsockfd, buf, strlen(buf), 0, (struct sockaddr *)&clientaddr, clientlen);
                     if (n < 0)
                         error("ERROR in password correct, shutting down message");
-
+					printf("wtf is going on\n");
                     // Shut down server - delete all board files and appended files, close all sockets
-                    //deleteBoards();
+					
+					char command[BUFSIZE];
+					printf("HERE\n");
+					for (i = 0; i < boardCount; i++) {
+						fprintf(stderr, "here\n");
+						bzero(command, BUFSIZE);
+						sprintf(command, "rm %s", boards[i]);
+						printf("Command: %s\n", command);
+						fflush(stdout);
+						system(command);
+					}
                     bzero(boards, MAX_BOARDS);
                     boardCount = 0;
                     close(udpsockfd);
@@ -324,38 +335,44 @@ int main(int argc, char *argv[]) {
 				int j_limit = 4095;
 				char currBuf[BUFSIZE];
 
+				printf("in RDB.\n");
 				bzero(buf, BUFSIZE);
-				n = read(tcpsockfd, buf, BUFSIZE);
+				n = read(sockfd2, buf, BUFSIZE);
 				if (n < 0)
 					error("Error reading filename.\n");
 
-				char *name;
+				char name[BUFSIZE];
 				strcpy(name, buf);
 				bzero(buf, BUFSIZE);
-				if (access(name, F_OK) != -1) { 	// file does not exist
+				printf("Before if.\n");
+				if (access(name, F_OK) == -1) { 	// file does not exist
+					printf("hey\n");
 					s = -1;
 					sprintf(buf, "%s", s);
-					n = write(tcpsockfd, buf, BUFSIZE);
+					n = write(sockfd2, buf, BUFSIZE);
 					if (n < 0)
 						error("Error in sending failure message.\n");
 					break;
 				}
+				printf("After if\n");
 
 				stat(name, &st);
 				size = st.st_size;
 				bzero(buf, BUFSIZE);
 				sprintf(buf, "%d", size);
+				printf("filesize: %d\n", size);
 				// Send file size to client
-				n = write(tcpsockfd, buf, BUFSIZE);
+				n = write(sockfd2, buf, BUFSIZE);
 				if (n < 0)
 					error("Error sending file size.\n");
 				
 				char fileBuf[size + 1];
 				readFile(fileBuf, name);
-
+				printf("After reading file.\n");
 				// Send file to client
 				if (size < 4096) {
-					n = write(tcpsockfd, fileBuf, BUFSIZE);
+					printf("Sending\n");
+					n = write(sockfd2, fileBuf, BUFSIZE);
 					if (n < 0)
 						error("Error sending file.\n");
 				} else {
